@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/mink/pkg/types"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/registry/rest"
+	"k8s.io/apiserver/pkg/storage/names"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -31,6 +32,7 @@ type Builder struct {
 	WarningsOnCreator strategy.WarningsOnCreator
 	Validator         strategy.Validator
 	NameValidator     strategy.NameValidator
+	NameGenerator     names.NameGenerator
 }
 
 func NewBuilder(scheme *runtime.Scheme, obj kclient.Object) *Builder {
@@ -106,6 +108,11 @@ func (b Builder) WithValidateCreate(validate strategy.Validator) *Builder {
 
 func (b Builder) WithValidateName(validate strategy.NameValidator) *Builder {
 	b.NameValidator = validate
+	return &b
+}
+
+func (b Builder) WithGenerateName(generate names.NameGenerator) *Builder {
+	b.NameGenerator = generate
 	return &b
 }
 
@@ -309,6 +316,9 @@ func (b Builder) createAdapter() *strategy.CreateAdapter {
 	create.Warner = b.WarningsOnCreator
 	create.Validator = b.Validator
 	create.NameValidator = b.NameValidator
+	if b.NameGenerator != nil {
+		create.NameGenerator = b.NameGenerator
+	}
 	return create
 }
 
